@@ -1070,5 +1070,16 @@ namespace ACE.Server.WorldObjects
             set { if (!value.HasValue) RemoveProperty(PropertyInstanceId.CurrentAppraisalTarget); else SetProperty(PropertyInstanceId.CurrentAppraisalTarget, value.Value); }
         }
 
+        public int KillStreak
+        {
+            get => GetProperty(PropertyInt.KillStreak) ?? 0;
+            set { if (value == 0) RemoveProperty(PropertyInt.KillStreak); else SetProperty(PropertyInt.KillStreak, (int)value); }
+        }
+
+        public bool Trophy
+        {
+            get => GetProperty(PropertyBool.Trophy) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.Trophy); else SetProperty(PropertyBool.Trophy, value); }
+        }
     }
 }
