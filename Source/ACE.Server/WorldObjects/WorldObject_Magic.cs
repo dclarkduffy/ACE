@@ -840,6 +840,8 @@ namespace ACE.Server.WorldObjects
                         {
                             if (recallDID == null)
                             {
+                                EnqueueBroadcast(new GameMessageScript(Guid, spell.CasterEffect, spell.Formula.Scale));
+
                                 // lifestone recall
                                 ActionChain lifestoneRecall = new ActionChain();
                                 lifestoneRecall.AddAction(targetPlayer, () => targetPlayer.DoPreTeleportHide());
@@ -861,6 +863,8 @@ namespace ACE.Server.WorldObjects
 
                                     break;
                                 }
+
+                                EnqueueBroadcast(new GameMessageScript(Guid, spell.CasterEffect, spell.Formula.Scale));
 
                                 ActionChain portalRecall = new ActionChain();
                                 portalRecall.AddAction(targetPlayer, () => targetPlayer.DoPreTeleportHide());
@@ -945,6 +949,8 @@ namespace ACE.Server.WorldObjects
 
                                     if (target.WeenieType == WeenieType.LifeStone)
                                     {
+                                        EnqueueBroadcast(new GameMessageScript(Guid, spell.CasterEffect, spell.Formula.Scale));
+
                                         player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You have successfully linked with the life stone.", ChatMessageType.Magic));
                                         player.LinkedLifestone = target.Location;
                                     }
@@ -984,6 +990,8 @@ namespace ACE.Server.WorldObjects
                                                     player.LinkedPortalTwoDID = targetDID;
                                                     player.SetProperty(PropertyBool.LinkedPortalTwoSummon, summoned);
                                                 }
+
+                                                EnqueueBroadcast(new GameMessageScript(Guid, spell.CasterEffect, spell.Formula.Scale));
 
                                                 player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You have successfully linked with the portal.", ChatMessageType.Magic));
                                             }
@@ -1073,7 +1081,9 @@ namespace ACE.Server.WorldObjects
                         if (summonLoc != null)
                             summonLoc.LandblockId = new LandblockId(summonLoc.GetCell());
 
-                        if (!SummonPortal(portalId, summonLoc, spell.PortalLifetime) && player != null)
+                        if (SummonPortal(portalId, summonLoc, spell.PortalLifetime))
+                            EnqueueBroadcast(new GameMessageScript(Guid, spell.CasterEffect, spell.Formula.Scale));
+                        else if (player != null)
                             player.Session.Network.EnqueueSend(new GameEventWeenieError(player.Session, WeenieError.YouFailToSummonPortal));
 
                         break;
