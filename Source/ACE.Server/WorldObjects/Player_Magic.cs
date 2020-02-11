@@ -791,10 +791,13 @@ namespace ACE.Server.WorldObjects
 
         public void FinishCast(WeenieError useDone)
         {
+            var hasWindupGestures = MagicState.CastSpellParams.HasWindupGestures;
             var castGesture = MagicState.CastGesture;
 
             if (FastTick)
-                castGesture = MagicState.CastSpellParams.HasWindupGestures ? CurrentMotionState.MotionState.ForwardCommand : MagicState.CastGesture;
+                castGesture = hasWindupGestures ? CurrentMotionState.MotionState.ForwardCommand : MagicState.CastGesture;
+
+            var selfTarget = !hasWindupGestures && MagicState.CastSpellParams.Target == this;
 
             MagicState.OnCastDone();
 
@@ -805,9 +808,11 @@ namespace ACE.Server.WorldObjects
 
             if (FastTick)
             {
+                var fastbuff = selfTarget && PropertyManager.GetBool("fastbuff").Item;
+
                 // return to magic ready stance
                 var actionChain = new ActionChain();
-                EnqueueMotion(actionChain, MotionCommand.Ready, 1.0f, true, castGesture);
+                EnqueueMotion(actionChain, MotionCommand.Ready, 1.0f, true, castGesture, false, fastbuff);
                 actionChain.AddAction(this, () =>
                 {
                     //if (!queue)
@@ -1413,15 +1418,19 @@ namespace ACE.Server.WorldObjects
                 DoCastSpell(MagicState, status != WeenieError.None);
         }
 
-        public void FailCast()
+        public void FailCast(bool tryFizzle = true)
         {
             var parms = MagicState.CastSpellParams;
 
-            if (parms == null) return;
+            var werror = WeenieError.None;
 
-            DoCastSpell_Inner(parms.Spell, parms.IsWeaponSpell, parms.ManaUsed, parms.Target, CastingPreCheckStatus.CastFailed, false);
+            if (parms != null && tryFizzle)
+            {
+                DoCastSpell_Inner(parms.Spell, parms.IsWeaponSpell, parms.ManaUsed, parms.Target, CastingPreCheckStatus.CastFailed, false);
 
-            SendUseDoneEvent(WeenieError.YourSpellFizzled);
+                werror = WeenieError.YourSpellFizzled;
+            }
+            SendUseDoneEvent(werror);
 
             MagicState.OnCastDone();
         }
