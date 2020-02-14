@@ -413,14 +413,34 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public bool LogOut(bool clientSessionTerminatedAbruptly = false, bool forceImmediate = false)
         {
-            if (PKLogoutActive && !forceImmediate)
+            if (!forceImmediate && Session.Player.Level > 9)
             {
-                Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
-                Session.Network.EnqueueSend(new GameMessageSystemChat("Logging out in 20s...", ChatMessageType.Magic));
+                var deflog = 20;
+
+                if (Session.Player.Enlightenment >= 1 && Session.Player.Enlightenment <= 2)
+                {
+                    deflog = 15;
+                    Session.Network.EnqueueSend(new GameMessageSystemChat("Logging out in 15s(-5s Enlightenment)...", ChatMessageType.Magic));
+                }
+                else if (Session.Player.Enlightenment >= 3 && Session.Player.Enlightenment <= 5)
+                {
+                    deflog = 10;
+                    Session.Network.EnqueueSend(new GameMessageSystemChat("Logging out in 10s(-10s Enlightenment)...", ChatMessageType.Magic));
+                }
+                else if (Session.Player.Enlightenment >= 6)
+                {
+                    deflog = 5;
+                    Session.Network.EnqueueSend(new GameMessageSystemChat("Logging out in 5s(-15s Enlightenment)...", ChatMessageType.Magic));
+                }
+                else
+                {
+                    Session.Network.EnqueueSend(new GameMessageSystemChat("Logging out in 20s...", ChatMessageType.Magic));
+                }
 
                 PKLogout = true;
+                
+                LogoffTimestamp = Time.GetFutureUnixTime(deflog);
 
-                LogoffTimestamp = Time.GetFutureUnixTime(PropertyManager.GetLong("pk_timer").Item);
                 PlayerManager.AddPlayerToLogoffQueue(this);
 
                 return false;

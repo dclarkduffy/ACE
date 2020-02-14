@@ -53,7 +53,7 @@ namespace ACE.Server.Managers
             });
         }
 
-        private static readonly LinkedList<Player> playersPendingLogoff = new LinkedList<Player>();
+        private static readonly LinkedList<Player> playersPendingLogoff = new LinkedList<Player>();       
 
         public static void AddPlayerToLogoffQueue(Player player)
         {
@@ -76,8 +76,9 @@ namespace ACE.Server.Managers
                 if (first.LogoffTimestamp <= currentUnixTime)
                 {
                     playersPendingLogoff.RemoveFirst();
-                    first.LogOut_Inner();
+
                     first.Session.logOffRequestTime = DateTime.UtcNow;
+                    first.LogOut_Inner();
                 }
                 else
                 {
@@ -601,11 +602,11 @@ namespace ACE.Server.Managers
 
             player.SetProperty(ACE.Entity.Enum.Properties.PropertyBool.IsGagged, true);
             player.SetProperty(ACE.Entity.Enum.Properties.PropertyFloat.GagTimestamp, Common.Time.GetUnixTime());
-            player.SetProperty(ACE.Entity.Enum.Properties.PropertyFloat.GagDuration, 300);
+            player.SetProperty(ACE.Entity.Enum.Properties.PropertyFloat.GagDuration, 31536000);
 
             player.SaveBiotaToDatabase();
 
-            BroadcastToAuditChannel(issuer, $"{issuer.Name} has gagged {player.Name} for five minutes.");
+            BroadcastToAuditChannel(issuer, $"{issuer.Name} has gagged {player.Name} for one year.");
 
             return true;
         }
