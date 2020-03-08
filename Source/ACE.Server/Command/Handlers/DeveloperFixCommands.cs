@@ -316,6 +316,9 @@ namespace ACE.Server.Command.Handlers
                     // skip admins
                     if (player.Account == null || player.Account.AccessLevel == (uint)AccessLevel.Admin)
                         continue;
+                    // Possibly skip enlightened.
+                    //if (player.GetProperty(PropertyInt.Enlightenment) >= 1) 
+                       // continue;
 
                     // player starts with 52 skill credits
                     var startCredits = 52;
@@ -375,6 +378,15 @@ namespace ACE.Server.Command.Handlers
                     var targetCredits = totalCredits - used;
                     var targetMsg = $"{player.Name} should have {targetCredits} available skill credits";
 
+                    if (player.GetProperty(PropertyInt.Enlightenment) >= 1)
+                    {
+                        targetMsg = $"{player.Name} should have {targetCredits} available skill credits. {player.Level} - (ENLIGHTENED)";
+                    }
+                    else
+                    {
+                        targetMsg = $"{player.Name} should have {targetCredits} available skill credits";
+                    }
+
                     if (targetCredits < 0)
                     {
                         // if the player has already spent more skill credits than they should have,
@@ -391,7 +403,7 @@ namespace ACE.Server.Command.Handlers
 
                     var availableCredits = player.GetProperty(PropertyInt.AvailableSkillCredits) ?? 0;
 
-                    if (availableCredits != targetCredits)
+                    if (availableCredits != targetCredits && player.GetProperty(PropertyInt.Enlightenment) == 0)
                     {
                         Console.WriteLine($"{targetMsg}, but they have {availableCredits}{fixStr}");
                         foundIssues = true;
@@ -1123,6 +1135,9 @@ namespace ACE.Server.Command.Handlers
 
         public static int GetArmorLevel(int armorLevel, EquipMask equipMask, TinkerLog tinkerLog, int numTinkers, int imbuedEffect)
         {
+            if (tinkerLog?.Tinkers.Count == 10 || numTinkers == 10)
+                return armorLevel;
+
             var maxArmorLevel = (equipMask & EquipMask.Extremity) != 0 ? MaxArmorLevel_Extremity : MaxArmorLevel_NonExtremity;
 
             if (tinkerLog != null && tinkerLog.Tinkers.Count == numTinkers)

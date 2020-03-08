@@ -92,6 +92,14 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
+            if (FastTick && PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.CurrentStyle != (uint)MotionStance.Magic)
+            {
+                log.Debug($"{Name} CombatMode: {CombatMode}, CurrentMotionState: {CurrentMotionState.Stance}.{CurrentMotionState.MotionState.ForwardCommand}, Physics: {(MotionStance)PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.CurrentStyle}.{(MotionCommand)PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.ForwardCommand}");
+                ApplyPhysicsMotion(new Motion(MotionStance.Magic));
+                SendUseDoneEvent(WeenieError.YoureTooBusy);
+                return;
+            }
+
             if (FastTick && !PhysicsObj.TransientState.HasFlag(TransientStateFlags.OnWalkable))
             {
                 SendUseDoneEvent(WeenieError.YouCantDoThatWhileInTheAir);
@@ -180,6 +188,12 @@ namespace ACE.Server.WorldObjects
         public void DoWindup(WindupParams windupParams, bool checkAngle)
         {
             //Console.WriteLine($"{Name}.DoWindup()");
+            if (windupParams == null)
+            {
+                SendUseDoneEvent();
+                MagicState.OnCastDone();
+                return;
+            }
 
             // ensure target still exists
             var targetCategory = GetTargetCategory(windupParams.TargetGuid, windupParams.SpellId, out var target);
@@ -271,6 +285,14 @@ namespace ACE.Server.WorldObjects
                     SendUseDoneEvent();
                     return;
                 }
+            }
+
+            if (FastTick && PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.CurrentStyle != (uint)MotionStance.Magic)
+            {
+                log.Debug($"{Name} CombatMode: {CombatMode}, CurrentMotionState: {CurrentMotionState.Stance}.{CurrentMotionState.MotionState.ForwardCommand}, Physics: {(MotionStance)PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.CurrentStyle}.{(MotionCommand)PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.ForwardCommand}");
+                ApplyPhysicsMotion(new Motion(MotionStance.Magic));
+                SendUseDoneEvent(WeenieError.YoureTooBusy);
+                return;
             }
 
             if (FastTick && !PhysicsObj.TransientState.HasFlag(TransientStateFlags.OnWalkable))
@@ -1404,6 +1426,9 @@ namespace ACE.Server.WorldObjects
 
         public void HandleMotionDone_Magic(uint motionID, bool success)
         {
+            if (RecordCast.Enabled)
+                RecordCast.Log($"{Name}.HandleMotionDone_Magic({(MotionCommand)motionID}, {success})");
+
             //Console.WriteLine($"HandleMotionDone_Magic({(MotionCommand)motionID}, {success})");
 
             if (!FastTick || !MagicState.IsCasting) return;
@@ -1429,6 +1454,9 @@ namespace ACE.Server.WorldObjects
 
         public void OnMoveComplete_Magic(WeenieError status)
         {
+            if (RecordCast.Enabled)
+                RecordCast.Log($"{Name}.OnMoveComplete_Magic({status})");
+
             //Console.WriteLine($"OnMoveComplete_Magic({status})");
 
             if (!FastTick || !MagicState.IsCasting || !MagicState.TurnStarted)
@@ -1436,10 +1464,7 @@ namespace ACE.Server.WorldObjects
 
             // this occurs after the player is done turning
             // before the windup, or after the first half of the cast motion
-            // either completed or cancelled
-
-            if (RecordCast.Enabled)
-                RecordCast.Log($"{Name}.OnMoveComplete_Magic({status}) - DoCastSpell");
+            // either completed or cancelled            
 
             MagicState.IsTurning = false;
 

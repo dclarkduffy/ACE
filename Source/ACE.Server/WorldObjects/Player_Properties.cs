@@ -1140,5 +1140,53 @@ namespace ACE.Server.WorldObjects
             get => GetProperty(PropertyBool.Trophy) ?? false;
             set { if (!value) RemoveProperty(PropertyBool.Trophy); else SetProperty(PropertyBool.Trophy, value); }
         }
+
+        public bool NetherFix
+        {
+            get => GetProperty(PropertyBool.NetherFix) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.Trophy); else SetProperty(PropertyBool.NetherFix, value); }
+        }
+
+        public int LowDrudgeSlayerCount
+        {
+            get => GetProperty(PropertyInt.LowDrudgeSlayerCount) ?? 0;
+            set { if (value == 0) RemoveProperty(PropertyInt.LowDrudgeSlayerCount); else SetProperty(PropertyInt.LowDrudgeSlayerCount, (int)value); }
+        }
+
+        public int MidDrudgeSlayerCount
+        {
+            get => GetProperty(PropertyInt.MidDrudgeSlayerCount) ?? 0;
+            set { if (value == 0) RemoveProperty(PropertyInt.MidDrudgeSlayerCount); else SetProperty(PropertyInt.MidDrudgeSlayerCount, (int)value); }
+        }
+
+        public int HighDrudgeSlayerCount
+        {
+            get => GetProperty(PropertyInt.HighDrudgeSlayerCount) ?? 0;
+            set { if (value == 0) RemoveProperty(PropertyInt.HighDrudgeSlayerCount); else SetProperty(PropertyInt.HighDrudgeSlayerCount, (int)value); }
+        }
+
+        public int LowNetherResist
+        {
+            get => GetProperty(PropertyInt.LowNetherResist) ?? 1;
+            set { if (value == 0) RemoveProperty(PropertyInt.LowNetherResist); else SetProperty(PropertyInt.LowNetherResist, (int)value); }
+        }       
+
+        public int MedNetherResist
+        {
+            get => GetProperty(PropertyInt.MedNetherResist) ?? 1;
+            set { if (value == 0) RemoveProperty(PropertyInt.MedNetherResist); else SetProperty(PropertyInt.MedNetherResist, (int)value); }
+        }        
+
+        public int HighNetherResist
+        {
+            get => GetProperty(PropertyInt.HighNetherResist) ?? 1;
+            set { if (value == 0) RemoveProperty(PropertyInt.HighNetherResist); else SetProperty(PropertyInt.HighNetherResist, (int)value); }
+        }        
+
+        public int HigherNetherResist
+        {
+            get => GetProperty(PropertyInt.HigherNetherResist) ?? 1;
+            set { if (value == 0) RemoveProperty(PropertyInt.HigherNetherResist); else SetProperty(PropertyInt.HigherNetherResist, (int)value); }
+        }                
     }
 }
