@@ -1022,6 +1022,7 @@ namespace ACE.Server.Command.Handlers
         {
             Console.WriteLine($"Fetching shard armors (this may take awhile on large servers) ...");
 
+            var resistMagic = GetResistMagic();
             var tinkerLogs = GetTinkerLogs();
             var numTimesTinkered = GetNumTimesTinkered();
             var imbuedEffects = GetImbuedEffect();
@@ -1055,6 +1056,10 @@ namespace ACE.Server.Command.Handlers
 
                 foreach (var armorItem in armorItems)
                 {
+                    // ignore unenchantable
+                    if (resistMagic.TryGetValue(armorItem.Guid, out var resist) && resist == 9999)
+                        continue;
+
                     TinkerLog tinkerLog = null;
                     if (tinkerLogs.TryGetValue(armorItem.Guid, out var _tinkerLog))
                         tinkerLog = new TinkerLog(_tinkerLog);
@@ -1094,6 +1099,16 @@ namespace ACE.Server.Command.Handlers
                 }
                 else
                     Console.WriteLine($"Verified {armorItems.Count:N0} armors.");
+            }
+        }
+
+        public static Dictionary<uint, int> GetResistMagic()
+        {
+            using (var ctx = new ShardDbContext())
+            {
+                var resistMagic = ctx.BiotaPropertiesInt.Where(i => i.Type == (int)PropertyInt.ResistMagic).ToDictionary(i => i.ObjectId, i => i.Value);
+
+                return resistMagic;
             }
         }
 

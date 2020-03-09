@@ -440,12 +440,13 @@ namespace ACE.Server.WorldObjects
                     Session.Network.EnqueueSend(new GameMessageSystemChat("Logging out in 20s...", ChatMessageType.Magic));
                 }
 
-                PKLogout = true;
-                
-                LogoffTimestamp = Time.GetFutureUnixTime(deflog);
+                if (!PKLogout)
+                {
+                    PKLogout = true;
 
-                PlayerManager.AddPlayerToLogoffQueue(this);
-
+                    LogoffTimestamp = Time.GetFutureUnixTime(PropertyManager.GetLong("pk_timer").Item);
+                    PlayerManager.AddPlayerToLogoffQueue(this);
+                }
                 return false;
             }
 
