@@ -480,8 +480,8 @@ namespace ACE.Server.WorldObjects
                 Session.Network.EnqueueSend(general, trade, lfg, roleplay);
             }
 
-            if (CurrentActiveCombatPet != null)
-                CurrentActiveCombatPet.Destroy();
+            if (CurrentActivePet != null)
+                CurrentActivePet.Destroy();
 
             if (CurrentLandblock != null)
             {
@@ -856,7 +856,7 @@ namespace ACE.Server.WorldObjects
             // broadcast jump
             EnqueueBroadcast(new GameMessageVectorUpdate(this));
 
-            if (RecordCast.Enabled)
+            if (MagicState.IsCasting && RecordCast.Enabled)
                 RecordCast.OnJump(jump);
         }
 
