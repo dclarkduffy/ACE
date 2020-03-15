@@ -95,6 +95,7 @@ namespace ACE.Server.WorldObjects
             if (FastTick && PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.CurrentStyle != (uint)MotionStance.Magic)
             {
                 log.Debug($"{Name} CombatMode: {CombatMode}, CurrentMotionState: {CurrentMotionState.Stance}.{CurrentMotionState.MotionState.ForwardCommand}, Physics: {(MotionStance)PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.CurrentStyle}.{(MotionCommand)PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.ForwardCommand}");
+
                 ApplyPhysicsMotion(new Motion(MotionStance.Magic));
                 SendUseDoneEvent(WeenieError.YoureTooBusy);
                 return;
@@ -290,6 +291,7 @@ namespace ACE.Server.WorldObjects
             if (FastTick && PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.CurrentStyle != (uint)MotionStance.Magic)
             {
                 log.Debug($"{Name} CombatMode: {CombatMode}, CurrentMotionState: {CurrentMotionState.Stance}.{CurrentMotionState.MotionState.ForwardCommand}, Physics: {(MotionStance)PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.CurrentStyle}.{(MotionCommand)PhysicsObj.MovementManager.MotionInterpreter.InterpretedState.ForwardCommand}");
+
                 ApplyPhysicsMotion(new Motion(MotionStance.Magic));
                 SendUseDoneEvent(WeenieError.YoureTooBusy);
                 return;
@@ -737,6 +739,13 @@ namespace ACE.Server.WorldObjects
 
             if (FastTick)
             {
+                if (PropertyManager.GetDouble("spellcast_max_angle").Item > 5.0f && IsWithinAngle(target))
+                {
+                    // emulate current gdle TurnTo - doesn't match retail, but some players may prefer this
+                    OnMoveComplete_Magic(WeenieError.None);
+                    return;
+                }
+
                 var stopCompletely = !MagicState.CastMotionDone;
                 //var stopCompletely = true;
 
@@ -746,7 +755,7 @@ namespace ACE.Server.WorldObjects
             }
         }
 
-        public Position StartPos;
+        public Physics.Common.Position StartPos { get; set; }
 
         public void DoCastSpell_Inner(Spell spell, bool isWeaponSpell, uint manaUsed, WorldObject target, CastingPreCheckStatus castingPreCheckStatus, bool finishCast = true)
         {
@@ -777,8 +786,8 @@ namespace ACE.Server.WorldObjects
                 TryBurnComponents(spell);
 
             // check windup move distance cap
-            var endPos = new Position(Location);
-            var dist = StartPos.DistanceTo(endPos);
+            var endPos = new Physics.Common.Position(PhysicsObj.Position);
+            var dist = StartPos.Distance(endPos);
 
             bool movedTooFar = false;
 
@@ -957,7 +966,7 @@ namespace ACE.Server.WorldObjects
             DoSpellWords(spell, isWeaponSpell);
 
             var spellChain = new ActionChain();
-            StartPos = new Position(Location);
+            StartPos = new Physics.Common.Position(PhysicsObj.Position);
 
             // do wind-up gestures: fastcast has no windup (creature enchantments)
             DoWindupGestures(spell, isWeaponSpell, spellChain);
@@ -1259,7 +1268,7 @@ namespace ACE.Server.WorldObjects
 
             var spellChain = new ActionChain();
 
-            StartPos = new Position(Location);
+            StartPos = new Physics.Common.Position(PhysicsObj.Position);
 
             // do wind-up gestures: fastcast has no windup (creature enchantments)
             DoWindupGestures(spell, false, spellChain);
