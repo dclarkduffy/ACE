@@ -66,7 +66,7 @@ namespace ACE.Server.WorldObjects
 
             var excludePlayers = new List<Player>();
 
-            var nearbyPlayers = EnqueueBroadcast(excludePlayers, false, broadcastMsg);
+            var nearbyPlayers = EnqueueBroadcast(excludePlayers, true, broadcastMsg);
 
             excludePlayers.AddRange(nearbyPlayers);
 
@@ -257,6 +257,8 @@ namespace ACE.Server.WorldObjects
 
                     // reset damage history for this player
                     DamageHistory.Reset();
+
+                    OnHealthUpdate();
                 });
 
                 teleportChain.EnqueueChain();
