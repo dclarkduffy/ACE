@@ -8,6 +8,7 @@ using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
 using ACE.Server.Entity;
 using ACE.Server.Factories;
+using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects;
 
 namespace ACE.Server.Managers
@@ -355,6 +356,261 @@ namespace ACE.Server.Managers
                     break;
             }
 
+            switch (source.MaterialType)
+            {
+                case MaterialType.LessDrudgeSlayer:
+
+                    // requirements:
+                    // - target has workmanship (loot generated)
+                    // - itemtype, such as weapon or armor/clothing
+                    // - etc.
+                    var applyable = false;
+
+                    if ((target.ItemType & (ItemType.WeaponOrCaster)) != 0 && target.Workmanship != null)
+                        applyable = true;
+
+                    if (Aetheria.IsAetheria(target.WeenieClassId) || target.GetProperty(PropertyInt.RareId) != null || (target.ItemType & (ItemType.Jewelry)) != 0
+                        || (target.ItemType & (ItemType.Vestements)) != 0)
+                        applyable = false;
+
+                    if (target.GetProperty(PropertyFloat.SlayerDamageBonus) >= 1.25)
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot apply a lesser or same value Slayer Gem to this weapon!", ChatMessageType.Broadcast));
+                        applyable = false;
+                    }
+
+                    if (!applyable)
+                        return null;
+
+                    // replace with your custom recipe id
+                    recipe = DatabaseManager.World.GetRecipe(666666);
+                    break;
+
+                case MaterialType.LessLessDrudgeSlayer:
+
+                    // requirements:
+                    // - target has workmanship (loot generated)
+                    // - itemtype, such as weapon or armor/clothing
+                    // - etc.
+                    var xapplyable = false;
+
+                    if ((target.ItemType & (ItemType.WeaponOrCaster)) != 0 && target.Workmanship != null)
+                        xapplyable = true;
+
+                    if (Aetheria.IsAetheria(target.WeenieClassId) || target.GetProperty(PropertyInt.RareId) != null || (target.ItemType & (ItemType.Jewelry)) != 0
+                        || (target.ItemType & (ItemType.Vestements)) != 0)
+                        xapplyable = false;
+
+                    if (target.GetProperty(PropertyFloat.SlayerDamageBonus) >= 1.15) // if this property is greater than what this gem gives.. dont allow apply and send msg
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot apply a lesser or same value Slayer Gem to this weapon!", ChatMessageType.Broadcast));
+                        xapplyable = false;
+                    }
+
+                    if (!xapplyable)
+                        return null;
+
+                    // replace with your custom recipe id
+                    recipe = DatabaseManager.World.GetRecipe(666667);
+                    break;
+
+                case MaterialType.LessGreaterDrudgeSlayer:
+
+                    // requirements:
+                    // - target has workmanship (loot generated)
+                    // - itemtype, such as weapon or armor/clothing
+                    // - etc.
+                    var zapplyable = false;
+
+                    if ((target.ItemType & (ItemType.WeaponOrCaster)) != 0 && target.Workmanship != null)
+                        zapplyable = true;
+
+                    if (Aetheria.IsAetheria(target.WeenieClassId) || target.GetProperty(PropertyInt.RareId) != null || (target.ItemType & (ItemType.Jewelry)) != 0
+                        || (target.ItemType & (ItemType.Vestements)) != 0)
+                        zapplyable = false;
+
+                    if (target.GetProperty(PropertyFloat.SlayerDamageBonus) >= 1.35) // if this property is greater than what this gem gives.. dont allow apply and send msg
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot apply a lesser or same value Slayer Gem to this weapon!", ChatMessageType.Broadcast));
+                        xapplyable = false;
+                    }
+
+                    if (!zapplyable)
+                        return null;
+
+                    // replace with your custom recipe id
+                    recipe = DatabaseManager.World.GetRecipe(666668);
+                    break;
+
+                case MaterialType.ModerateDrudgeSlayer:
+
+                    // requirements:
+                    // - target has workmanship (loot generated)
+                    // - itemtype, such as weapon or armor/clothing
+                    // - etc.
+                    var qapplyable = false;
+
+                    if ((target.ItemType & (ItemType.WeaponOrCaster)) != 0 && target.Workmanship != null)
+                        qapplyable = true;
+
+                    if (Aetheria.IsAetheria(target.WeenieClassId) || target.GetProperty(PropertyInt.RareId) != null || (target.ItemType & (ItemType.Jewelry)) != 0
+                        || (target.ItemType & (ItemType.Vestements)) != 0)
+                        qapplyable = false;
+
+                    if (target.GetProperty(PropertyFloat.SlayerDamageBonus) >= 1.60) // if this property is greater than what this gem gives.. dont allow apply and send msg
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot apply a lesser or same value Slayer Gem to this weapon!", ChatMessageType.Broadcast));
+                        qapplyable = false;
+                    }
+
+                    if (!qapplyable)
+                        return null;
+
+                    // replace with your custom recipe id
+                    recipe = DatabaseManager.World.GetRecipe(666669);
+                    break;
+
+                case MaterialType.ModerateLessDrudgeSlayer:
+
+                    // requirements:
+                    // - target has workmanship (loot generated)
+                    // - itemtype, such as weapon or armor/clothing
+                    // - etc.
+                    var wapplyable = false;
+
+                    if ((target.ItemType & (ItemType.WeaponOrCaster)) != 0 && target.Workmanship != null)
+                        wapplyable = true;
+
+                    if (Aetheria.IsAetheria(target.WeenieClassId) || target.GetProperty(PropertyInt.RareId) != null || (target.ItemType & (ItemType.Jewelry)) != 0
+                        || (target.ItemType & (ItemType.Vestements)) != 0)
+                        wapplyable = false;
+
+                    if (target.GetProperty(PropertyFloat.SlayerDamageBonus) >= 1.50) // if this property is greater than what this gem gives.. dont allow apply and send msg
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot apply a lesser or same value Slayer Gem to this weapon!", ChatMessageType.Broadcast));
+                        wapplyable = false;
+                    }
+
+                    if (!wapplyable)
+                        return null;
+
+                    // replace with your custom recipe id
+                    recipe = DatabaseManager.World.GetRecipe(666670);
+                    break;
+
+                case MaterialType.ModerateGreaterDrudgeSlayer:
+
+                    // requirements:
+                    // - target has workmanship (loot generated)
+                    // - itemtype, such as weapon or armor/clothing
+                    // - etc.
+                    var eapplyable = false;
+
+                    if ((target.ItemType & (ItemType.WeaponOrCaster)) != 0 && target.Workmanship != null)
+                        eapplyable = true;
+
+                    if (Aetheria.IsAetheria(target.WeenieClassId) || target.GetProperty(PropertyInt.RareId) != null || (target.ItemType & (ItemType.Jewelry)) != 0
+                        || (target.ItemType & (ItemType.Vestements)) != 0)
+                        eapplyable = false;
+
+                    if (target.GetProperty(PropertyFloat.SlayerDamageBonus) >= 1.70) // if this property is greater than what this gem gives.. dont allow apply and send msg
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot apply a lesser or same value Slayer Gem to this weapon!", ChatMessageType.Broadcast));
+                        eapplyable = false;
+                    }
+
+                    if (!eapplyable)
+                        return null;
+
+                    // replace with your custom recipe id
+                    recipe = DatabaseManager.World.GetRecipe(666671);
+                    break;
+
+                case MaterialType.GreaterLessDrudgeSlayer:
+
+                    // requirements:
+                    // - target has workmanship (loot generated)
+                    // - itemtype, such as weapon or armor/clothing
+                    // - etc.
+                    var rapplyable = false;
+
+                    if ((target.ItemType & (ItemType.WeaponOrCaster)) != 0 && target.Workmanship != null)
+                        rapplyable = true;
+
+                    if (Aetheria.IsAetheria(target.WeenieClassId) || target.GetProperty(PropertyInt.RareId) != null || (target.ItemType & (ItemType.Jewelry)) != 0
+                        || (target.ItemType & (ItemType.Vestements)) != 0)
+                        rapplyable = false;
+
+                    if (target.GetProperty(PropertyFloat.SlayerDamageBonus) >= 1.80) // if this property is greater than what this gem gives.. dont allow apply and send msg
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot apply a lesser or same value Slayer Gem to this weapon!", ChatMessageType.Broadcast));
+                        rapplyable = false;
+                    }
+
+                    if (!rapplyable)
+                        return null;
+
+                    // replace with your custom recipe id
+                    recipe = DatabaseManager.World.GetRecipe(666672);
+                    break;
+
+                case MaterialType.GreaterDrudgeSlayer:
+
+                    // requirements:
+                    // - target has workmanship (loot generated)
+                    // - itemtype, such as weapon or armor/clothing
+                    // - etc.
+                    var tapplyable = false;
+
+                    if ((target.ItemType & (ItemType.WeaponOrCaster)) != 0 && target.Workmanship != null)
+                        tapplyable = true;
+
+                    if (Aetheria.IsAetheria(target.WeenieClassId) || target.GetProperty(PropertyInt.RareId) != null || (target.ItemType & (ItemType.Jewelry)) != 0
+                        || (target.ItemType & (ItemType.Vestements)) != 0)
+                        tapplyable = false;
+
+                    if (target.GetProperty(PropertyFloat.SlayerDamageBonus) >= 1.90) // if this property is greater than what this gem gives.. dont allow apply and send msg
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot apply a lesser or same value Slayer Gem to this weapon!", ChatMessageType.Broadcast));
+                        tapplyable = false;
+                    }
+
+                    if (!tapplyable)
+                        return null;
+
+                    // replace with your custom recipe id
+                    recipe = DatabaseManager.World.GetRecipe(666673);
+                    break;
+
+                case MaterialType.GreaterGreaterDrudgeSlayer:
+
+                    // requirements:
+                    // - target has workmanship (loot generated)
+                    // - itemtype, such as weapon or armor/clothing
+                    // - etc.
+                    var yapplyable = false;
+
+                    if ((target.ItemType & (ItemType.WeaponOrCaster)) != 0 && target.Workmanship != null)
+                        yapplyable = true;
+
+                    if (Aetheria.IsAetheria(target.WeenieClassId) || target.GetProperty(PropertyInt.RareId) != null || (target.ItemType & (ItemType.Jewelry)) != 0
+                        || (target.ItemType & (ItemType.Vestements)) != 0)
+                        yapplyable = false;
+
+                    if (target.GetProperty(PropertyFloat.SlayerDamageBonus) >= 2) // if this property is greater than what this gem gives.. dont allow apply and send msg
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot apply a lesser or same value Slayer Gem to this weapon!", ChatMessageType.Broadcast));
+                        eapplyable = false;
+                    }
+
+                    if (!yapplyable)
+                        return null;
+
+                    // replace with your custom recipe id
+                    recipe = DatabaseManager.World.GetRecipe(666674);
+                    break;
+
+            }
             return recipe;
         }
 
