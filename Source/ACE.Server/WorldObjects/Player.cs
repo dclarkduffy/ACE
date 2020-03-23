@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 using log4net;
 
@@ -870,7 +871,8 @@ namespace ACE.Server.WorldObjects
             else
             {
                 // set jump velocity
-                PhysicsObj.set_velocity(jump.Velocity, true);
+                var glob_velocity = Vector3.Transform(jump.Velocity, Location.Rotation);
+                PhysicsObj.set_velocity(glob_velocity, true);
             }
 
             // this shouldn't be needed, but without sending this update motion / simulated movement event beforehand,
@@ -1034,22 +1036,29 @@ namespace ACE.Server.WorldObjects
             EnqueueBroadcast(new GameMessageSystemChat($"{Name} is looking for a fight!", ChatMessageType.Broadcast), LocalBroadcastRange);
 
             // perform pk lite entry motion / effect
-            var motion = new Motion(MotionStance.NonCombat, MotionCommand.EnterPKLite);
-            EnqueueBroadcastMotion(motion);
 
-            var motionTable = DatManager.PortalDat.ReadFromDat<MotionTable>(MotionTableId);
-            var animLength = motionTable.GetAnimationLength(MotionStance.NonCombat, MotionCommand.EnterPKLite);
+            IsBusy = true;
+
+            var prevStance = CurrentMotionState.Stance;
 
             var actionChain = new ActionChain();
-            actionChain.AddDelaySeconds(animLength);
-            IsBusy = true;
+
+            var animTime = 0.0f;
+
+            animTime += EnqueueMotion_Force(actionChain, MotionStance.NonCombat, MotionCommand.EnterPKLite);
+
             actionChain.AddAction(this, () =>
             {
-                IsBusy = false;
                 UpdateProperty(this, PropertyInt.PlayerKillerStatus, (int)PlayerKillerStatus.PKLite, true);
 
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouAreNowPKLite));
             });
+
+            // return to previous stance, if applicable
+            if (prevStance != MotionStance.NonCombat)
+                animTime += EnqueueMotion_Force(actionChain, prevStance, MotionCommand.Ready, MotionCommand.NonCombat);
+
+            actionChain.AddAction(this, () => IsBusy = false);
 
             actionChain.EnqueueChain();
         }
