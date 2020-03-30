@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 
 using log4net;
 
@@ -7,11 +9,13 @@ using ACE.Database;
 using ACE.Entity.Enum;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
+using ACE.Entity.Enum.Properties;
 using ACE.Server.Managers;
 using ACE.Server.Network;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects;
+using ACE.Entity;
 
 namespace ACE.Server.Command.Handlers
 {
@@ -26,6 +30,82 @@ namespace ACE.Server.Command.Handlers
         public static void HandlePop(Session session, params string[] parameters)
         {
             session.Network.EnqueueSend(new GameMessageSystemChat($"Current world population: {PlayerManager.GetOnlineCount().ToString()}\n", ChatMessageType.Broadcast));
+        }
+
+        // unstuck
+        [CommandHandler("unstuck", AccessLevel.Player, CommandHandlerFlag.None, 0,
+            "Attempts to unstuck a player",
+            "")]
+        public static void HandleUnstuck(Session session, params string[] parameters)
+        {
+            if (!session.Player.PKTimerActive)
+            {
+                log.Warn($"{session.Player.Name} has attempted unstuck");
+                session.Network.EnqueueSend(new GameMessageSystemChat($"Please wait 1 minute for the process. Teleporting to where the server thinks you are...(hopefully)", ChatMessageType.Broadcast));
+                var currentPos = new Position(session.Player.Location);
+                session.Player.Teleport(session.Player.Location);
+                session.Player.SetPosition(PositionType.TeleportedCharacter, currentPos);
+
+                var actionChain = new ActionChain();
+                actionChain.AddDelaySeconds(57.0f);
+                actionChain.AddAction(session.Player, () =>
+                {
+                    session.LogOffPlayer(true);
+                    session.Network.EnqueueSend(new GameMessageSystemChat($"Forcing Log out.", ChatMessageType.Broadcast));
+                });
+                actionChain.AddDelaySeconds(3.0f);
+                actionChain.AddAction(session.Player, () =>
+                {
+                    //string specifiedReason = "commandunstuck";
+                    session.Player.SavePlayerToDatabase();
+                    PlayerManager.SwitchPlayerFromOnlineToOffline(session.Player);
+                    //session.Terminate(SessionTerminationReason.PacketHeaderDisconnect, new GameMessageBootAccount(session, specifiedReason), null, specifiedReason);
+                    //session.Network.EnqueueSend(new GameMessageSystemChat($"Ending Session.", ChatMessageType.Broadcast));
+                });
+                actionChain.EnqueueChain();
+
+            }
+        }
+
+        // delevelcheck + live xp feed.
+        [CommandHandler("delevelxp", AccessLevel.Player, CommandHandlerFlag.RequiresWorld,
+            "commands that control Xp for various actions in realtime, also to check delevelxp",
+            "")]
+        public static void Handledelevelxp(Session session, params string[] parameters)
+        {
+            {
+                if (parameters.Length == 0)
+                {
+                    session.Player.XpShow = !session.Player.XpShow;
+                    session.Network.EnqueueSend(new GameMessageSystemChat($"Live XP display is {(session.Player.XpShow ? "enabled" : "disabled")}", ChatMessageType.Broadcast));
+                }
+                else
+                {
+                    if (parameters[0].Equals("on", StringComparison.OrdinalIgnoreCase))
+                    {
+                        session.Player.XpShow = true;
+                        session.Network.EnqueueSend(new GameMessageSystemChat($"Live XP display is {(session.Player.XpShow ? "enabled" : "disabled")}", ChatMessageType.Broadcast));
+                    }
+                    else if (parameters[0].Equals("check", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var dlvlxp = session.Player.GetProperty(PropertyInt64.DelevelXp);
+
+                        if (dlvlxp == null)
+                        {
+                            session.Network.EnqueueSend(new GameMessageSystemChat($"You have no delevel xp.", ChatMessageType.Broadcast));
+                        }
+                        else
+                        {
+                            session.Network.EnqueueSend(new GameMessageSystemChat($"You need {dlvlxp:N0} xp to regain your levels back.", ChatMessageType.Broadcast));
+                        }
+                    }
+                    else if (parameters[0].Equals("off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        session.Player.XpShow = false;
+                        session.Network.EnqueueSend(new GameMessageSystemChat($"Live XP display is {(session.Player.XpShow ? "enabled" : "disabled")}", ChatMessageType.Broadcast));
+                    }
+                }
+            }
         }
 
         // quest info (uses GDLe formatting to match plugin expectations)
@@ -45,7 +125,7 @@ namespace ACE.Server.Command.Handlers
                 var quest = DatabaseManager.World.GetCachedQuest(questName);
                 if (quest == null)
                 {
-                    Console.WriteLine($"Couldn't find quest {playerQuest.QuestName}");
+                    //Console.WriteLine($"Couldn't find quest {playerQuest.QuestName}");
                     continue;
                 }
                 text += $"{playerQuest.QuestName.ToLower()} - {playerQuest.NumTimesCompleted} solves ({playerQuest.LastTimeCompleted})";
@@ -134,15 +214,31 @@ namespace ACE.Server.Command.Handlers
         [CommandHandler("debugcast", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Shows debug information about the current magic casting state")]
         public static void HandleDebugCast(Session session, params string[] parameters)
         {
+            session.Network.EnqueueSend(new GameMessageSystemChat(GetDebugCast(session), ChatMessageType.Broadcast));
+        }
+
+        public static string GetDebugCast(Session session)
+        {
             var physicsObj = session.Player.PhysicsObj;
 
             var pendingActions = physicsObj.MovementManager.MoveToManager.PendingActions;
-            var currAnim = physicsObj.PartArray.Sequence.CurrAnim;
+            var sequence = physicsObj.PartArray.Sequence;
 
-            session.Network.EnqueueSend(new GameMessageSystemChat(session.Player.MagicState.ToString(), ChatMessageType.Broadcast));
-            session.Network.EnqueueSend(new GameMessageSystemChat($"IsMovingOrAnimating: {physicsObj.IsMovingOrAnimating}", ChatMessageType.Broadcast));
-            session.Network.EnqueueSend(new GameMessageSystemChat($"PendingActions: {pendingActions.Count}", ChatMessageType.Broadcast));
-            session.Network.EnqueueSend(new GameMessageSystemChat($"CurrAnim: {currAnim?.Value.Anim.ID:X8}", ChatMessageType.Broadcast));
+            var str = session.Player.MagicState.ToString();
+            str += $"\nIsMovingOrAnimating: {physicsObj.IsMovingOrAnimating}";
+            str += $"\n- IsAnimating: {physicsObj.IsAnimating}";
+            str += $"\n- IsFirstCyclic: {!physicsObj.PartArray.Sequence.is_first_cyclic()}";
+            str += $"\n- CachedVelocity: {physicsObj.CachedVelocity != Vector3.Zero}";
+            str += $"\n- Velocity: {physicsObj.Velocity != Vector3.Zero}";
+            str += $"\n- InterpretedState.HasCommands: {physicsObj.MovementManager.MotionInterpreter.InterpretedState.HasCommands()}";
+            str += $"\n- MoveToManager: {physicsObj.MovementManager.MoveToManager.Initialized}";
+            str += $"\nCurCell: {physicsObj.CurCell?.ID:X8}";
+            str += $"\nPendingActions: {pendingActions.Count}";
+            str += $"\nAnimList: {string.Join(", ", sequence.AnimList.Select(i => i.Anim.ID.ToString("X8")))}";
+            str += $"\nFirstCyclic: {sequence.FirstCyclic?.Value.Anim.ID:X8}";
+            str += $"\nCurrAnim: {sequence.CurrAnim?.Value.Anim.ID:X8}";
+
+            return str;
         }
 
         [CommandHandler("fixcast", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Fixes magic casting if locked up for an extended time")]
@@ -152,10 +248,30 @@ namespace ACE.Server.Command.Handlers
 
             if (magicState.IsCasting && DateTime.UtcNow - magicState.StartTime > TimeSpan.FromSeconds(5))
             {
+                var debugCast = GetDebugCast(session);
+
+                DebugAnimQueue(session);
+
+                session.Player.RecordCast.ShowInfo(debugCast);
+
                 session.Network.EnqueueSend(new GameEventCommunicationTransientString(session, "Fixed casting state"));
                 session.Player.SendUseDoneEvent();
                 magicState.OnCastDone();
             }
+        }
+
+        public static void DebugAnimQueue(Session session)
+        {
+            session.Player.PhysicsObj.DebugAnim = true;
+
+            for (var i = 0; i < 5; i++)
+            {
+                session.Player.RecordCast.Log($"DebugAnimQueue({i})");
+                session.Player.PhysicsObj.UpdateTime = Physics.Common.PhysicsTimer.CurrentTime - 1.0f;
+                session.Player.PhysicsObj.update_object();
+            }
+
+            session.Player.PhysicsObj.DebugAnim = false;
         }
 
         [CommandHandler("castmeter", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Shows the fast casting efficiency meter")]
@@ -343,5 +459,12 @@ namespace ACE.Server.Command.Handlers
             }
             session.Player.PrevObjSend = DateTime.UtcNow;
         }
+
+        /*[CommandHandler("debugstance", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Debug logs the most recent stance history")]
+       public static void HandleDebugStance(Session session, params string[] parameters)
+       {
+           session.Player.StanceLog.Show();
+       }*/
+
     }
 }

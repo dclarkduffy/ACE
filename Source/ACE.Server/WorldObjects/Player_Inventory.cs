@@ -2402,9 +2402,9 @@ namespace ACE.Server.WorldObjects
 
                 var stackSize = itemToGive.StackSize ?? 1;
 
-                var stackMsg = stackSize != 1 ? $"{stackSize} " : "";
-                var itemName = itemToGive.GetNameWithMaterial(stackSize);
-
+                var stackMsg = stackSize != 1 ? $"{stackSize} " : "";              
+                var itemName = itemToGive.GetNameWithMaterial(stackSize);                
+                
                 Session.Network.EnqueueSend(new GameMessageSystemChat($"You give {target.Name} {stackMsg}{itemName}.", ChatMessageType.Broadcast));
 
                 // send DO to source player if not splitting a stack
