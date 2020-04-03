@@ -416,7 +416,27 @@ namespace ACE.Server.WorldObjects.Managers
                 vitae = BuildEntry(spell);
                 vitae.EnchantmentCategory = (uint)EnchantmentMask.Vitae;
                 vitae.LayerId = 1; // This should be 0 but EF Core seems to be very unhappy with 0 as the layer id now that we're using layer as part of the composite key.
-                vitae.StatModValue = 1.0f - (float)PropertyManager.GetDouble("vitae_penalty").Item;
+
+                if (Player.Enlightenment >= 1 && Player.Enlightenment <= 2)
+                {
+                    vitae.StatModValue = 1.0f - (float)PropertyManager.GetDouble("vitae_penalty").Item + (float)0.01;
+                }// reduce vitae by 1%
+                else if (Player.Enlightenment >= 3 && Player.Enlightenment <= 4)
+                {
+                    vitae.StatModValue = 1.0f - (float)PropertyManager.GetDouble("vitae_penalty").Item + (float)0.02;
+                }// reduce vitae by 2%
+                else if (Player.Enlightenment >= 5 && Player.Enlightenment <= 6)
+                {
+                    vitae.StatModValue = 1.0f - (float)PropertyManager.GetDouble("vitae_penalty").Item + (float)0.03;
+                }// reduce vitae by 3%
+                else if (Player.Enlightenment >= 7)
+                {
+                    vitae.StatModValue = 1.0f - (float)PropertyManager.GetDouble("vitae_penalty").Item + (float)0.04;
+                }// reduce vitae by 4%
+                else
+                {
+                    vitae.StatModValue = 1.0f - (float)PropertyManager.GetDouble("vitae_penalty").Item;
+                } // do normal stuff if no enlighten
                 WorldObject.Biota.PropertiesEnchantmentRegistry.AddEnchantment(vitae, WorldObject.BiotaDatabaseLock);
                 WorldObject.ChangesDetected = true;
             }
@@ -424,7 +444,30 @@ namespace ACE.Server.WorldObjects.Managers
             {
                 // update existing vitae
                 vitae = GetVitae();
-                vitae.StatModValue -= (float)PropertyManager.GetDouble("vitae_penalty").Item;
+                if (Player.Enlightenment >= 1 && Player.Enlightenment <= 2)
+                {
+                    vitae.StatModValue -= (float)PropertyManager.GetDouble("vitae_penalty").Item - (float)0.01;
+                    
+                }// reduce vitae by 1%
+                else if (Player.Enlightenment >= 3 && Player.Enlightenment <= 4)
+                {
+                    vitae.StatModValue -= (float)PropertyManager.GetDouble("vitae_penalty").Item - (float)0.02;
+                    
+                }// reduce vitae by 2%
+                else if (Player.Enlightenment >= 5 && Player.Enlightenment <= 6)
+                {
+                    vitae.StatModValue -= (float)PropertyManager.GetDouble("vitae_penalty").Item - (float)0.03;
+                    
+                }// reduce vitae by 3%
+                else if (Player.Enlightenment >= 7 && Player.Enlightenment <= 8)
+                {
+                    vitae.StatModValue -= (float)PropertyManager.GetDouble("vitae_penalty").Item - (float)0.04;
+                    
+                }// reduce vitae by 4%
+                else
+                {
+                    vitae.StatModValue -= (float)PropertyManager.GetDouble("vitae_penalty").Item;                    
+                } // do normal stuff if no enlighten
                 WorldObject.ChangesDetected = true;
             }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
@@ -6,6 +7,7 @@ using ACE.Common;
 using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
 using ACE.Entity.Models;
+using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
 using ACE.Server.Factories;
 using ACE.Server.Managers;
@@ -27,6 +29,24 @@ namespace ACE.Server.WorldObjects
 
         private const double ageUpdateInterval = 7;
         private double nextAgeUpdateTime;
+
+
+        public static HashSet<uint> noobzonekillblocks = new HashSet<uint>
+                {
+                    0x003F0140, 0x003F0141, 0x003F0142, 0x003F0143, 0x003F0144, 0x003F0145, 0x003F013C, 0x003F013D, 0x003F013E, 0x003F013F, 0x003F013B, 0x003F013A, 0x003F0139, 0x003F0138, 0x003F0137, 0x003F0132, 0x003F0133, 0x003F0134, 0x003F0135, 0x003F0136
+                  , 0x003F018A, 0x003F01CF, 0x003F027B, 0x003F026E, 0x003F0267, 0x003F0266, 0x003F0263, 0x003F0264, 0x003F0255, 0x003F0253, 0x003F0252, 0x003F0251, 0x003F024C, 0x003F0260, 0x003F023C, 0x003F0242, 0x003F023F, 0x003F0234, 0x003F0228, 0x003F0225
+                  , 0x003F0244, 0x003F025A, 0x003F02A6, 0x003F0298, 0x003F0299, 0x003F029A, 0x003F028C, 0x003F0291, 0x003F029C, 0x003F029F, 0x003F02A2, 0x003F02B4, 0x003F02B5, 0x003F02A0, 0x003F02A3, 0x003F0292, 0x003F0293, 0x003F0295, 0x003F028A, 0x003F0289
+                  , 0x003F0286, 0x003F0287, 0x003F0288, 0x003F028B, 0x003F0285, 0x003F0283, 0x003F0284, 0x003F0282, 0x003F027F, 0x003F02A4, 0x003F02A5, 0x003F02A7, 0x003F0248, 0x003F0246, 0x003F0247, 0x003F025B, 0x003F025C, 0x003F025D, 0x003F0249, 0x003F024A
+                  , 0x003F0239, 0x003F023B, 0x003F023A, 0x003F024B, 0x003F025F, 0x003F0265, 0x003F0264, 0x003F025E, 0x003F026D, 0x003F0268, 0x003F0269, 0x003F0272, 0x003F026F, 0x003F0278, 0x003F027C, 0x003F022F, 0x003F0222, 0x003F0223, 0x003F021A, 0x003F021B
+                  , 0x003F021C, 0x003F021D, 0x003F0224, 0x003F0231, 0x003F017D, 0x003F0182, 0x003F0183, 0x003F0186, 0x003F0189, 0x003F0188, 0x003F0187, 0x003F0184, 0x003F0181, 0x003F0185, 0x003F014B, 0x003F0152, 0x003F0151, 0x003F014A, 0x003F0146, 0x003F0147
+                  , 0x003F0148, 0x003F014C, 0x003F0153, 0x003F014D, 0x003F0150, 0x003F0149, 0x003F0235, 0x003F0236, 0x003F0237, 0x003F0238, 0x003F022E, 0x003F022D, 0x003F0230, 0x003F021E, 0x003F020F, 0x003F0201, 0x003F01FF, 0x003F0200, 0x003F0204, 0x003F0206
+                  , 0x003F0207, 0x003F0205, 0x003F0210, 0x003F0203, 0x003F0202, 0x003F01FE, 0x003F01FC, 0x003F01FD, 0x003F01FB, 0x003F01F1, 0x003F01EA, 0x003F022D, 0x003F022C, 0x003F0221, 0x003F0220, 0x003F0218, 0x003F020E, 0x003F01C1, 0x003F01BE, 0x003F01C2
+                  , 0x003F01BB, 0x003F01BC, 0x003F01BD, 0x003F01B9, 0x003F01B3, 0x003F01B2, 0x003F01B1, 0x003F01B5, 0x003F01BA, 0x003F01B8, 0x003F01B7, 0x003F017C, 0x003F017A, 0x003F0177, 0x003F0178, 0x003F0179, 0x003F0170, 0x003F016F, 0x003F016E, 0x003F0176
+                  , 0x003F0124, 0x003F011C, 0x003F011D, 0x003F011E, 0x003F0126, 0x003F0125, 0x003F0219, 0x003F0217, 0x003F0216, 0x003F0214, 0x003F0215, 0x003F0213, 0x003F020B, 0x003F020D, 0x003F020C, 0x003F0209, 0x003F020A, 0x003F0208, 0x003F01F8, 0x003F01FA
+                  , 0x003F01F9, 0x003F01F6, 0x003F01F7, 0x003F01F5, 0x003F01ED, 0x003F01B4, 0x003F017B, 0x003F0131, 0x003F010D, 0x003F010C, 0x003F0109, 0x003F0106, 0x003F0103, 0x003F0100, 0x003F0101, 0x003F0102, 0x003F0105, 0x003F0108, 0x003F010B, 0x003F010E
+                  , 0x003F010A, 0x003F0107, 0x003F0104, 0x003F0114, 0x003F0110, 0x003F010F, 0x003F0113, 0x003F0111, 0x003F0115, 0x003F0116, 0x003F011B, 0x003F011A, 0x003F0122, 0x003F0123, 0x003F012B, 0x003F012A, 0x003F0130, 0x003F012F, 0x003F012C, 0x003F012D
+                  , 0x003F0127, 0x003F0128, 0x003F011F, 0x003F0120, 0x003F0117, 0x003F0118, 0x003F0112
+                };
 
         public void Player_Tick(double currentUnixTime)
         {
@@ -74,6 +94,13 @@ namespace ACE.Server.WorldObjects
 
             GagsTick();
 
+            if (noobzonekillblocks.Contains(Location.Cell) && Level > 100)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat($"You shouldn't be in this location for your level. Teleporting you to your lifestone.", ChatMessageType.Broadcast));
+                PlayerManager.BroadcastToAuditChannel(Session.Player, $"{Name} has been teleported from noob dungeon aftering reaching level 101");
+                WorldManager.ThreadSafeTeleport(this, Sanctuary);
+            }
+
             PhysicsObj.ObjMaint.DestroyObjects();
 
             // Check if we're due for our periodic SavePlayer
@@ -102,7 +129,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Flag indicates if player is doing full physics simulation
         /// </summary>
-        public bool FastTick => IsPKType;
+        public bool FastTick => true;
 
         /// <summary>
         /// For advanced spellcasting / players glitching around during powersliding,
@@ -132,7 +159,7 @@ namespace ACE.Server.WorldObjects
             if (DebugPlayerMoveToStatePhysics)
                 Console.WriteLine(moveToState.RawMotionState);
 
-            if (RecordCast.Enabled)
+            if (RecordCast.Mode == RecordCastMode.Enabled)
                 RecordCast.OnMoveToState(moveToState);
 
             if (!PhysicsObj.IsMovingOrAnimating)
@@ -425,10 +452,10 @@ namespace ACE.Server.WorldObjects
 
                 Location = newPosition;
 
-                if (RecordCast.Enabled)
+                if (RecordCast.Mode == RecordCastMode.Enabled)
                     RecordCast.Log($"CurPos: {Location.ToLOCString()}");
 
-                if (RequestedLocationBroadcast || DateTime.UtcNow - LastUpdatePosition >= MoveToState_UpdatePosition_Threshold)
+                if (RequestedLocationBroadcast || DateTime.UtcNow - LastUpdatePosition >= MoveToState_UpdatePosition_Threshold || FastTick && !PhysicsObj.TransientState.HasFlag(TransientStateFlags.OnWalkable))
                     SendUpdatePosition();
                 else
                     Session.Network.EnqueueSend(new GameMessageUpdatePosition(this));
@@ -461,6 +488,9 @@ namespace ACE.Server.WorldObjects
             {
                 if ((Location.Cell & 0xFFFF) >= 0x100 && (newPosition.Cell & 0xFFFF) >= 0x100)
                     return false;
+
+                if (!Location.Indoors && !newPosition.Indoors)
+                    return true;
 
                 if (CurrentLandblock.IsDungeon)
                 {
