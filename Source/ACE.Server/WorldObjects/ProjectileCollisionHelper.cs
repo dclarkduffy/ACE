@@ -35,12 +35,22 @@ namespace ACE.Server.WorldObjects
             if (targetCreature != null)
             {
                 if (sourcePlayer != null)
-                {
-                    // player damage monster or player
-                    damageEvent = sourcePlayer.DamageTarget(targetCreature, worldObject);
+                {                   
 
-                    if (damageEvent != null && damageEvent.HasDamage)
-                        worldObject.EnqueueBroadcast(new GameMessageSound(worldObject.Guid, Sound.Collision, 1.0f));
+                    if (targetCreature.Warded && targetCreature.ToggleMis)
+                    {
+                        sourcePlayer.Session.Network.EnqueueSend(new GameMessageSystemChat($"{targetCreature.Name} resists your attack completely", ChatMessageType.Magic));
+                        return;
+                    }
+                    else
+                    {
+                        // player damage monster or player
+                        damageEvent = sourcePlayer.DamageTarget(targetCreature, worldObject);
+
+                        if (damageEvent != null && damageEvent.HasDamage)
+                            worldObject.EnqueueBroadcast(new GameMessageSound(worldObject.Guid, Sound.Collision, 1.0f));
+                    }
+
                 }
                 else if (sourceCreature != null && sourceCreature.AttackTarget != null)
                 {
@@ -105,7 +115,10 @@ namespace ACE.Server.WorldObjects
 
             if (worldObject.ProjectileSource is Player player)
             {
-                player.Session.Network.EnqueueSend(new GameMessageSystemChat("Your missile attack hit the environment.", ChatMessageType.Broadcast));
+                if (ProjectileTarget is Creature creature && creature.Warded)
+                    return;
+                else
+                    player.Session.Network.EnqueueSend(new GameMessageSystemChat("Your missile attack hit the environment.", ChatMessageType.Broadcast));
             }
             else if (worldObject.ProjectileSource is Creature creature)
             {
