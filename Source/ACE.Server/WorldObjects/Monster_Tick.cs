@@ -109,7 +109,7 @@ namespace ACE.Server.WorldObjects
             var targetDist = GetDistanceToTarget();
             //Console.WriteLine($"{Name} ({Guid}) - Dist: {targetDist}");
 
-            if (Sticky)
+            if (PhysicsObj.PositionManager?.StickyManager != null && PhysicsObj.PositionManager.StickyManager.TargetID != 0)
                 UpdatePosition();
 
             if (CurrentAttack != CombatType.Missile)
@@ -154,7 +154,7 @@ namespace ACE.Server.WorldObjects
 
                     // should ranged mobs only get CurrentTargets within MaxRange?
                     //Console.WriteLine($"{Name}.MissileAttack({AttackTarget.Name}): targetDist={targetDist}, MaxRange={MaxRange}, switching to melee");
-                    SwitchToMeleeAttack();
+                    TrySwitchToMeleeAttack();
                 }
             }
 
