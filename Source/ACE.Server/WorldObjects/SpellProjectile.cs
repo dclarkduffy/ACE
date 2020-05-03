@@ -419,6 +419,13 @@ namespace ACE.Server.WorldObjects
             {
                 lifeMagicDamage = LifeProjectileDamage * Spell.DamageRatio;
 
+                if (isPVP)
+                {
+                    var modifier = PropertyManager.GetDouble("life_spell_damage_modifier").Item;
+
+                    lifeMagicDamage *= (float)modifier;
+                }
+
                 // could life magic projectiles crit?
                 // if so, did they use the same 1.5x formula as war magic, instead of 2.0x?
                 if (criticalHit)
@@ -439,6 +446,40 @@ namespace ACE.Server.WorldObjects
             // war/void magic projectiles
             else
             {
+                var minDamage = Spell.MinDamage;
+                var maxDamage = Spell.MaxDamage;
+
+                if (isPVP)
+                {
+                    var modifier = PropertyManager.GetDouble("spell_damage_modifier").Item; // mostly unused
+
+                    if (Spell.School == MagicSchool.WarMagic)
+                    {
+                        if (SpellType != ProjectileSpellType.Streak)
+                        {
+                            modifier = PropertyManager.GetDouble("war_spell_damage_modifier").Item; // scales war damages for all projectile war spells
+                        }
+                        else if (SpellType == ProjectileSpellType.Streak)
+                        {
+                            modifier = PropertyManager.GetDouble("war_streak_spell_damage_modifier").Item; // scales war streak damages
+                        }
+                    }
+                    else if (Spell.School == MagicSchool.VoidMagic)
+                    {
+                        if (SpellType != ProjectileSpellType.Streak)
+                        {
+                            modifier = PropertyManager.GetDouble("void_spell_damage_modifier").Item;
+                        }                       
+                        else if (SpellType == ProjectileSpellType.Streak)
+                        {
+                            modifier = PropertyManager.GetDouble("void_streak_spell_damage_modifier").Item;
+                        }
+                    }                   
+
+                    minDamage = (int)Math.Round(minDamage * modifier);
+                    maxDamage = (int)Math.Round(maxDamage * modifier);
+                }
+
                 if (criticalHit)
                 {
                     // Original:
@@ -458,9 +499,9 @@ namespace ACE.Server.WorldObjects
                     // No more crits that do less damage than non-crits!
 
                     if (isPVP) // PvP: 50% of the MIN damage added to normal damage roll
-                        critDamageBonus = Spell.MinDamage * 0.5f;
+                        critDamageBonus = minDamage * 0.5f;
                     else   // PvE: 50% of the MAX damage added to normal damage roll
-                        critDamageBonus = Spell.MaxDamage * 0.5f;
+                        critDamageBonus = maxDamage * 0.5f;
 
                     weaponCritDamageMod = GetWeaponCritDamageMod(sourceCreature, attackSkill, target);
 
@@ -483,10 +524,10 @@ namespace ACE.Server.WorldObjects
                         //var percentageBonus = Math.Clamp((magicSkill - Spell.Power) / 100.0f, 0.0f, 0.5f);
                         var percentageBonus = (magicSkill - difficulty) / 1000.0f;
 
-                        skillBonus = Spell.MinDamage * percentageBonus;
+                        skillBonus = minDamage * percentageBonus;
                     }
                 }
-                baseDamage = ThreadSafeRandom.Next(Spell.MinDamage, Spell.MaxDamage);
+                baseDamage = ThreadSafeRandom.Next(minDamage, maxDamage);
 
                 weaponResistanceMod = GetWeaponResistanceModifier(sourceCreature, attackSkill, Spell.DamageType);
 
@@ -641,6 +682,12 @@ namespace ACE.Server.WorldObjects
             var sneakAttackMod = 1.0f;
             var damageRatingMod = 1.0f;
             var damageResistRatingMod = 1.0f;
+
+            if (target != null && target.Warded && target.ToggleSpell && sourcePlayer != null)
+            {
+                sourcePlayer.Session.Network.EnqueueSend(new GameMessageSystemChat($"The mob resists your spell completely", ChatMessageType.Magic));
+                return;
+            }
 
             // handle life projectiles for stamina / mana
             if (Spell.Category == SpellCategory.StaminaLowering)
