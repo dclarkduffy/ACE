@@ -152,13 +152,8 @@ namespace ACE.Server.Factories
         /// <summary>
         /// This is currently just a function to help test some functionality in the loot gen system.
         /// </summary>
-        /// <param name="wcid"></param>
-        /// <param name="tier"></param>
-        /// <returns></returns>
         public static WorldObject CreateLootByWCID(uint wcid, int tier)
         {
-            int longDescDecoration = 5;
-
             WorldObject wo = WorldObjectFactory.CreateNewWorldObject(wcid);
 
             if (wo == null)
@@ -169,7 +164,7 @@ namespace ACE.Server.Factories
             wo.ItemWorkmanship = workmanship;
             wo.GemCount = ThreadSafeRandom.Next(1, 5);
             wo.GemType = (MaterialType)ThreadSafeRandom.Next(10, 50);
-            wo.AppraisalLongDescDecoration = longDescDecoration;
+            wo.AppraisalLongDescDecoration = AppraisalLongDescDecorations.PrependMaterial | AppraisalLongDescDecorations.AppendGemInfo;
             wo.LongDesc = wo.Name;
 
             if (wo.TsysMutationData != null)
@@ -278,16 +273,23 @@ namespace ACE.Server.Factories
             }
         }
 
-        private static int GetWield(int tier, int type)
+        public enum WieldType
         {
+            None,
+            MissileWeapon,
+            Caster,
+            MeleeWeapon,
+        };
 
+        private static int GetWieldDifficulty(int tier, WieldType type)
+        {
             int wield = 0;
             int chance = ThreadSafeRandom.Next(1, 100);
 
-            ////Types: 1 Missiles, 2 Casters, 3 melee weapons, 4 covenant armor
             switch (type)
             {
-                case 1:  // Missile Weapons
+                case WieldType.MissileWeapon:
+
                     switch (tier)
                     {
                         case 1:
@@ -349,7 +351,9 @@ namespace ACE.Server.Factories
                             break;
                     }
                     break;
-                case 2:  // Casters
+
+                case WieldType.Caster:
+
                     switch (tier)
                     {
                         case 1:
@@ -403,7 +407,9 @@ namespace ACE.Server.Factories
                             break;
                     }
                     break;
-                case 3: // Melee Weapons
+
+                case WieldType.MeleeWeapon:
+
                     switch (tier)
                     {
                         case 1:
@@ -1209,15 +1215,6 @@ namespace ACE.Server.Factories
             return highSpellTier;
         }
 
-        private static int GetSkillLevelLimit(int wield)
-        {
-
-            double percentage = (double)ThreadSafeRandom.Next(75, 98);
-            int skill = (int)(percentage * (double)wield);
-
-            return skill;
-        }
-
         private static double GetManaCMod(int tier)
         {
             int magicMod = 0;
@@ -1323,6 +1320,7 @@ namespace ACE.Server.Factories
 
             return manaDMod;
         }
+
         /// <summary>
         /// Returns Values for Magic & Missile Defense Bonus. Updated HarliQ 11/17/19
         /// </summary>
@@ -1562,7 +1560,6 @@ namespace ACE.Server.Factories
 
         private static int GetSpellcraft(int spellAmount, int tier)
         {
-
             int spellcraft = 0;
             switch (tier)
             {
@@ -1672,9 +1669,6 @@ namespace ACE.Server.Factories
         /// <summary>
         /// Returns an appropriate material type for the World Object based on its loot tier.
         /// </summary>
-        /// <param name="wo"></param>
-        /// <param name="tier"></param>
-        /// <returns></returns>
         private static int GetMaterialType(WorldObject wo, int tier)
         {
             int defaultMaterialType = (int)SetDefaultMaterialType(wo);
@@ -1723,19 +1717,15 @@ namespace ACE.Server.Factories
                         if (groupProbability > groupRng || groupProbability == totalGroupProbability)
                             return (int)g.MaterialId;
                     }
-
                     break;
                 }
             }
-
-            return (int)defaultMaterialType;
+            return defaultMaterialType;
         }
 
         /// <summary>
         /// Sets a randomized default material type for when a weenie does not have TsysMutationData 
         /// </summary>
-        /// <param name="wo"></param>
-        /// <returns></returns>
         private static MaterialType SetDefaultMaterialType(WorldObject wo)
         {
             if (wo == null)
@@ -1775,99 +1765,6 @@ namespace ACE.Server.Factories
             }
 
             return material;
-        }
-
-        private static double GetMeleeDMod(int tier)
-        {
-            double meleeMod = 0;
-            int chance = 0;
-
-            switch (tier)
-            {
-                case 1:
-                    meleeMod = 0;
-                    break;
-                case 2:
-                    chance = ThreadSafeRandom.Next(1, 100);
-                    if (chance < 60)
-                        meleeMod = 0;
-                    else if (chance < 80)
-                        meleeMod = .01;
-                    else if (chance < 92)
-                        meleeMod = .02;
-                    else
-                        meleeMod = .03;
-                    break;
-                case 3:
-                    chance = ThreadSafeRandom.Next(1, 100);
-                    if (chance < 60)
-                        meleeMod = .03;
-                    else if (chance < 80)
-                        meleeMod = .04;
-                    else if (chance < 92)
-                        meleeMod = .05;
-                    else
-                        meleeMod = .06;
-                    break;
-                case 4:
-                    chance = ThreadSafeRandom.Next(1, 100);
-                    if (chance < 60)
-                        meleeMod = .06;
-                    else if (chance < 80)
-                        meleeMod = .07;
-                    else if (chance < 92)
-                        meleeMod = .08;
-                    else
-                        meleeMod = .09;
-                    break;
-                case 5:
-                    chance = ThreadSafeRandom.Next(1, 100);
-                    if (chance < 60)
-                        meleeMod = .09;
-                    else if (chance < 80)
-                        meleeMod = .1;
-                    else if (chance < 92)
-                        meleeMod = .11;
-                    else
-                        meleeMod = .12;
-                    break;
-                case 6:
-                    chance = ThreadSafeRandom.Next(1, 100);
-                    if (chance < 60)
-                        meleeMod = .12;
-                    else if (chance < 80)
-                        meleeMod = .13;
-                    else if (chance < 92)
-                        meleeMod = .14;
-                    else
-                        meleeMod = .15;
-                    break;
-                case 7:
-                    chance = ThreadSafeRandom.Next(1, 100);
-                    if (chance < 60)
-                        meleeMod = .15;
-                    else if (chance < 80)
-                        meleeMod = .16;
-                    else if (chance < 92)
-                        meleeMod = .17;
-                    else
-                        meleeMod = .18;
-                    break;
-                case 8:
-                    chance = ThreadSafeRandom.Next(1, 100);
-                    if (chance < 60)
-                        meleeMod = .17;
-                    else if (chance < 80)
-                        meleeMod = .18;
-                    else if (chance < 92)
-                        meleeMod = .19;
-                    else
-                        meleeMod = .20;
-                    break;
-            }
-
-            meleeMod += 1.0;
-            return meleeMod;
         }
 
         private static int GetNumLegendaryCantrips(TreasureDeath profile)
@@ -2038,20 +1935,16 @@ namespace ACE.Server.Factories
         /// <summary>
         /// Set the AppraisalLongDescDecoration of the item, which controls the full descriptive text shown in the client on appraisal
         /// </summary>
-        /// <param name="wo"></param>
-        /// <returns></returns>
         private static WorldObject SetAppraisalLongDescDecoration(WorldObject wo)
         {
-            // LDDecoration_PrependWorkmanship = 0x1,
-            // LDDecoration_PrependMaterial = 0x2,
-            // LDDecoration_AppendGemInfo = 0x4,
-            int appraisalLongDescDecoration = 0;
+            var appraisalLongDescDecoration = AppraisalLongDescDecorations.None;
+
             if (wo.ItemWorkmanship > 0)
-                appraisalLongDescDecoration |= 1;
+                appraisalLongDescDecoration |= AppraisalLongDescDecorations.PrependWorkmanship;
             if (wo.MaterialType > 0)
-                appraisalLongDescDecoration |= 2;
+                appraisalLongDescDecoration |= AppraisalLongDescDecorations.PrependMaterial;
             if (wo.GemType > 0 && wo.GemCount > 0)
-                appraisalLongDescDecoration |= 4;
+                appraisalLongDescDecoration |= AppraisalLongDescDecorations.AppendGemInfo;
 
             if (appraisalLongDescDecoration > 0)
                 wo.AppraisalLongDescDecoration = appraisalLongDescDecoration;
@@ -2098,7 +1991,6 @@ namespace ACE.Server.Factories
         /// <summary>
         /// Assign a random color (Int.PaletteTemplate and Float.Shade) to a World Object based on the material assigned to it.
         /// </summary>
-        /// <param name="wo"></param>
         /// <returns>WorldObject with a random applicable PaletteTemplate and Shade applied, if available</returns>
         private static WorldObject RandomizeColor(WorldObject wo)
         {
@@ -2175,7 +2067,7 @@ namespace ACE.Server.Factories
                         // Throw some shade, at random
                         wo.Shade = ThreadSafeRandom.Next(0.0f, 1.0f);
 
-                        // Some debu ginfo...
+                        // Some debug info...
                         // log.Info($"Color success for {wo.MaterialType}({(int)wo.MaterialType}) - {wo.WeenieClassId} - {wo.Name}. PaletteTemplate {paletteTemplate} applied.");
                     }
                 }
@@ -2202,6 +2094,7 @@ namespace ACE.Server.Factories
             var totalSum = prob.Sum();
             return totalSum;
         }
+
         private static float GetTotalProbability(List<TreasureMaterialBase> list)
         {
             if (list == null || list.Count == 0) return 0.0f;
@@ -2211,6 +2104,7 @@ namespace ACE.Server.Factories
             var totalSum = prob.Sum();
             return totalSum;
         }
+
         private static float GetTotalProbability(List<TreasureMaterialGroups> list)
         {
             if (list == null || list.Count == 0) return 0.0f;
